@@ -72,7 +72,7 @@ Maksimal 200 kata. Gunakan bahasa teknis tapi mudah dipahami.`;
   }
 }
 
-async function generateReport(period = 'daily', options = {}) {
+async function generateReport(period = 'daily', options = {}, useAi = true) {
   const now = Date.now();
   const startTs = period === 'daily' ? now - 86400000 : period === 'weekly' ? now - 604800000 : now - 2592000000;
   const telemetryKeys = (options.telemetryKeys || ['temperature', 'humidity', 'energy']).join(',');
@@ -97,9 +97,12 @@ async function generateReport(period = 'daily', options = {}) {
     }
   }));
 
-  console.log('Generating AI conclusion...');
-  const aiConclusion = await generateAiConclusion(deviceData, alarms, period);
-  console.log('AI conclusion ready');
+  let aiConclusion = null;
+  if (useAi) {
+    console.log('Generating AI conclusion...');
+    aiConclusion = await generateAiConclusion(deviceData, alarms, period);
+    console.log('AI conclusion ready');
+  }
 
   const chartDatasets = deviceData.slice(0, 5).map((d, idx) => {
     const colors = ['#6F42C1', '#007BFF', '#28a745', '#fd7e14', '#dc3545'];
@@ -188,10 +191,11 @@ async function generateReport(period = 'daily', options = {}) {
   </div>
 </div>
 
+${aiConclusion ? `
 <div class="section">
   <div class="section-title">🤖 AI Analysis & Conclusion</div>
   <div class="ai-box">${aiHtml}</div>
-</div>
+</div>` : ''}
 
 <div class="section">
   <div class="section-title">📈 Telemetry Trend — ${keys[0]}</div>

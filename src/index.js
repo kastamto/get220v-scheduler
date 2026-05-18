@@ -17,11 +17,27 @@ app.use('/api', routes);
 // Download report langsung
 app.get('/report/:period', async (req, res) => {
   try {
-    const { pdf } = await generateReport(req.params.period);
+    const useAi = req.query.ai !== 'false';
+    const { pdf } = await generateReport(req.params.period, {}, useAi);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=get220v-${req.params.period}-report.pdf`);
     res.send(pdf);
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// Forward report ke Telegram via scheduler (avoid CORS)
+app.post('/report/telegram', async (req, res) => {
+  try {
+    const { period, useAi } = req.body;
+    const chatApiUrl = process.env.CHAT_API_URL || 'http://localhost:3001';
+    const response = await require('axios').post(`${chatApiUrl}/api/telegram/report`, {
+      period: period || 'daily'
+    });
+    res.json({ success: true });
+  } catch(err) {
     res.status(500).json({ error: err.message });
   }
 });
