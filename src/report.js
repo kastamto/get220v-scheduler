@@ -87,7 +87,8 @@ async function generateReport(period = 'daily', options = {}, useAi = true) {
   const alarms = await getAlarms(startTs, now);
   const keys = options.telemetryKeys || ['temperature', 'humidity', 'energy'];
 
-  const deviceData = await Promise.all(devices.slice(0, 10).map(async d => {
+  const maxDev = options.maxDevices || 20;
+  const deviceData = await Promise.all(devices.slice(0, maxDev).map(async d => {
     try {
       const telemetry = await getTelemetry(d.id.id, telemetryKeys, startTs, now);
       const ml = await getMlInsights(d.id.id, keys[0]);

@@ -109,4 +109,4 @@ async function getAllEnabledJobs() {
   return result.rows;
 }
 
-module.exports = { initDb, createJob, getJobs, getJob, updateJob, deleteJob, updateLastRun, getAllEnabledJobs };
+module.exports = { pool, initDb, createJob, getJobs, getJob, updateJob, deleteJob, updateLastRun, getAllEnabledJobs };
