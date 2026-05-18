@@ -3,7 +3,6 @@ const router = express.Router();
 const { createJob, getJobs, getJob, updateJob, deleteJob } = require('./db');
 const { runJob } = require('./runner');
 
-// Get all jobs per tenant
 router.get('/jobs', async (req, res) => {
   try {
     const tenantId = req.headers['x-tenant-id'] || 'default';
@@ -14,7 +13,6 @@ router.get('/jobs', async (req, res) => {
   }
 });
 
-// Get single job
 router.get('/jobs/:id', async (req, res) => {
   try {
     const job = await getJob(req.params.id);
@@ -25,7 +23,6 @@ router.get('/jobs/:id', async (req, res) => {
   }
 });
 
-// Create job
 router.post('/jobs', async (req, res) => {
   try {
     const tenantId = req.headers['x-tenant-id'] || 'default';
@@ -36,7 +33,6 @@ router.post('/jobs', async (req, res) => {
   }
 });
 
-// Update job
 router.put('/jobs/:id', async (req, res) => {
   try {
     const job = await updateJob(req.params.id, req.body);
@@ -46,7 +42,6 @@ router.put('/jobs/:id', async (req, res) => {
   }
 });
 
-// Delete job
 router.delete('/jobs/:id', async (req, res) => {
   try {
     await deleteJob(req.params.id);
@@ -56,7 +51,6 @@ router.delete('/jobs/:id', async (req, res) => {
   }
 });
 
-// Manual run job
 router.post('/jobs/:id/run', async (req, res) => {
   try {
     const job = await getJob(req.params.id);

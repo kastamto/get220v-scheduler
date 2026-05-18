@@ -27,6 +27,7 @@ async function initDb() {
         smtp_user TEXT,
         smtp_pass TEXT,
         smtp_from TEXT,
+        telegram_chat_id TEXT,
         enabled BOOLEAN DEFAULT true,
         last_run TIMESTAMP,
         next_run TIMESTAMP,
@@ -34,6 +35,7 @@ async function initDb() {
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
+    await client.query(`ALTER TABLE scheduler_jobs ADD COLUMN IF NOT EXISTS telegram_chat_id TEXT`);
     console.log('✅ Scheduler jobs table ready');
   } finally {
     client.release();
@@ -44,12 +46,12 @@ async function createJob(job) {
   const result = await pool.query(
     `INSERT INTO scheduler_jobs 
      (tenant_id, name, description, cron_expression, report_type, device_ids, 
-      telemetry_keys, email_recipients, smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, enabled)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+      telemetry_keys, email_recipients, smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, telegram_chat_id, enabled)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
      RETURNING *`,
     [job.tenantId, job.name, job.description, job.cronExpression, job.reportType,
      job.deviceIds, job.telemetryKeys, job.emailRecipients, job.smtpHost,
-     job.smtpPort, job.smtpUser, job.smtpPass, job.smtpFrom, job.enabled !== false]
+     job.smtpPort, job.smtpUser, job.smtpPass, job.smtpFrom, job.telegramChatId, job.enabled !== false]
   );
   return result.rows[0];
 }
@@ -73,11 +75,19 @@ async function updateJob(id, job) {
      name=$1, description=$2, cron_expression=$3, report_type=$4,
      device_ids=$5, telemetry_keys=$6, email_recipients=$7,
      smtp_host=$8, smtp_port=$9, smtp_user=$10, smtp_pass=$11, smtp_from=$12,
-     enabled=$13, updated_at=NOW()
-     WHERE id=$14 RETURNING *`,
-    [job.name, job.description, job.cronExpression, job.reportType,
-     job.deviceIds, job.telemetryKeys, job.emailRecipients,
-     job.smtpHost, job.smtpPort, job.smtpUser, job.smtpPass, job.smtpFrom,
+     telegram_chat_id=$13, enabled=$14, updated_at=NOW()
+     WHERE id=$15 RETURNING *`,
+    [job.name, job.description, job.cronExpression || job.cron_expression, 
+     job.reportType || job.report_type,
+     job.deviceIds || job.device_ids, 
+     job.telemetryKeys || job.telemetry_keys, 
+     job.emailRecipients || job.email_recipients,
+     job.smtpHost || job.smtp_host, 
+     job.smtpPort || job.smtp_port, 
+     job.smtpUser || job.smtp_user, 
+     job.smtpPass || job.smtp_pass, 
+     job.smtpFrom || job.smtp_from,
+     job.telegramChatId || job.telegram_chat_id,
      job.enabled, id]
   );
   return result.rows[0];
